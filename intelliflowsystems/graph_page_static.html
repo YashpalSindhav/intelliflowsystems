@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+	<title>Yashpal Task - intelliflow systems</title>
+
+	<meta name="msapplication-TileColor" content="#ffffff">
+	<meta name="theme-color" content="#ffffff">
+
+
+	<!-- Frameworks css -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/roboto_font.css" rel="stylesheet">
+	<link href="css/main.css" rel="stylesheet">
+
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="site_page">
+
+	<div class="analytic_block">
+		<div id="graph_block" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+	</div>
+
+
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="js/jquery.min.js"></script>
+	<!-- Include all compiled plugins (below), or include individual files as needed -->
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/highcharts.js"></script>
+	<script src="js/exporting.js"></script>
+	<!-- <script src="js/export-data.js"></script> -->
+	<!-- <script src="js/design.js"></script> -->
+
+
+	<!-- Custom Script for to fetch data from given APIs -->
+	<script>
+			(function ($) {
+
+				var weatherData = [];
+				var searchData = ['Oak Street Weather Station', 'Foster Weather Station'];
+				getWeatherData();
+
+				function getWeatherData() {
+					$.ajax({
+						type: 'GET',
+						url: 'https://data.cityofchicago.org/resource/k7hf-8y75.json',
+						data: {},
+						dataType: 'json',
+						success: function (data) {
+							weatherData = data;
+							renderCharts(getHighChartData(data));
+						},
+						error: function (err) {
+							alert('failed to get weather data');
+						}
+					});
+				}
+
+				function getHighChartData(data) {
+					var dataLen = data.length;
+					var oakSter = [];
+					var fosterWea = [];
+					
+					for (i = 0; i < dataLen; i++) {
+						var temp = [
+							parseFloat(data[i].air_temperature),
+							parseFloat(data[i].wind_speed),
+							parseFloat(data[i].humidity)
+						];
+						if(getHourDiff(data[i].measurement_timestamp) < 2000){
+							if (data[i].station_name === 'Oak Street Weather Station') {
+								oakSter = oakSter.concat(temp);
+							} else if (data[i].station_name === 'Foster Weather Station') {
+								fosterWea = fosterWea.concat(temp);
+							}
+						}
+					}
+					var filteredData = [
+						{ name: 'Oak Street Weather Station', data: oakSter },
+						{ name: 'Foster Weather Station', data: fosterWea }
+					];
+					return filteredData;
+					//data.filter(obj => (obj.station_name === 'Oak Street Weather Station' || obj.station_name === 'Foster Weather Station') );
+				}
+
+				function renderCharts(data) {
+					console.log(data);
+					Highcharts.chart('graph_block', {
+						chart: {
+							type: 'column'
+						},
+						title: {
+							text: 'Weather forecast'
+						},
+						xAxis: {
+							categories:  ['Air Temperature', 'Wind speed', 'Humidity']
+						},
+						credits: {
+							enabled: false
+						},
+						series: data
+					});
+				}
+
+				function getHourDiff(timestamp){
+					return Math.abs(new Date() - new Date(timestamp)) / 36e5;
+				}
+				// https://stackoverflow.com/questions/19225414/how-to-get-the-hours-difference-between-two-date-objects
+
+			})(jQuery);
+
+	</script>
+</body>
+
+</html>
